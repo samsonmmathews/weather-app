@@ -15,16 +15,20 @@ window.onload = function() {
         result.innerHTML = "Fetching weather...";
 
         try {
-            const response = await fetch("/", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({ city })
-            });
+            const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`);
+            const data = await response.json();
 
-            const html = await response.text();
-            document.body.innerHTML = html;
-        } catch (err) {
-            result.innerHTML = "Error fetching weather data.";
+            if (data.error) {
+                result.innerHTML = `<p style="color:red;">${data.error}</p>`;
+            } else {
+                result.innerHTML = `
+                    <h2>Weather in ${data.city}:</h2>
+                    <p>Temperature: ${data.temp}°C</p>
+                    <p>Condition: ${data.desc}</p>
+                `;
+            }
+        } catch {
+            result.innerHTML = `<p style="color:red;">Error fetching weather data.</p>`;
         }
     });
 }
