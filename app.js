@@ -1,20 +1,22 @@
 require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.set('view engine', 'ejs');
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(express.urlencoded({ extended: true }));
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 app.get('/', (req, res) => {
-    res.render('index', { weather: null, error: null });
+    res.render('index');
 });
 
-app.post('/', async (req, res) => {
-    const city = req.body.city;
+app.get('/api/weather', async (req, res) => {
+    const city = req.query.city;
 
     if(!city) {
         return res.render('index', { weather: null, error: 'Please enter a city name.'});
@@ -27,16 +29,14 @@ app.post('/', async (req, res) => {
         const response = await axios.get(url);
         const data = response.data;
 
-        const weather = {
+        res.json({
             city: data.name,
             temp: Math.round(data.main.temp),
             desc: data.weather[0].description
-        };
+        });
         
-        res.render('index', { weather, error: null });
     } catch (err) {
-        console.error(err.message || err);
-        res.render('index', { weather: null, error: 'Could not get the weather for this location.'});
+        res.json({ error: "Could not get the weather for this location." });
     }
 });
 
